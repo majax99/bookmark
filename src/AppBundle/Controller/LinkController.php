@@ -16,6 +16,8 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use FOS\RestBundle\Controller\Annotations\Get;
 use FOS\RestBundle\Controller\Annotations\View;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\JsonResponse;
 
 class LinkController extends FOSRestController
 {
@@ -65,36 +67,46 @@ class LinkController extends FOSRestController
     /**
      * @Rest\Delete(
      *     path = "/link/{id}",
-     *     name = "app_link_show",
+     *     name = "app_link_delete",
      *     requirements = {"id"="\d+"}
      * )
-     * @View
+     * @View(statusCode=Response::HTTP_NO_CONTENT)
      */
     public function deleteAction(Link $link)
     {
-        $id = $link->getId();
-        if (!$link->getId()) {
-            return 'The link does not exist';
-        }
         $em = $this->getDoctrine()->getManager();
-
+        $link_id = $em->getRepository('AppBundle:Link')->find($link->get('id'));
         $em->remove($link);
         $em->flush();
 
-        return 'The id '.$id.' has been removed';
+        return 'The id '.$link_id.' has been removed';
     }
 
     /**
+     * @Rest\View(StatusCode = 200)
      * @Rest\Put(
      *     path = "/link/{id}",
-     *     name = "app_link_show",
+     *     name = "app_link_update",
      *     requirements = {"id"="\d+"}
      * )
-     * @View
+     * @ParamConverter("newlink", converter="fos_rest.request_body",
+     *     options={
+     *         "validator"={ "groups"="Update" }
+     *     })
      */
-    public function updateAction(Link $link)
+    public function updateAction(Link $link, Link $newlink)
     {
+
+        $em = $this->getDoctrine()->getManager();
+        $link->setLink($newlink->getLink());
+        $link->setBookmark($newlink->getBookmark());
+        $link->setType($newlink->getType());
+
+        $this->getDoctrine()->getManager()->flush();
+
         return $link;
     }
+
+
 
 }
