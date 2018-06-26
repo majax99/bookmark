@@ -32,13 +32,69 @@ class LinkController extends FOSRestController
         return $link;
     }
 
+
     /**
-     * @Rest\Post("/link")
-     * @Rest\View
+     * @Rest\Get("/links", name="app_link_list")
+     * @View
+     */
+    public function listAction()
+    {
+        $links = $this->getDoctrine()->getRepository('AppBundle:Link')->findAll();
+        
+        return $links;
+    }
+
+    /**
+     * @Rest\Post(
+     *    path = "/links",
+     *    name = "app_link_create"
+     * )
+     * @Rest\View(StatusCode = 201)
      * @ParamConverter("link", converter="fos_rest.request_body")
      */
     public function createAction(Link $link)
     {
-        dump($link); die;
+        $em = $this->getDoctrine()->getManager();
+
+        $em->persist($link);
+        $em->flush();
+
+        return $link;
     }
+
+    /**
+     * @Rest\Delete(
+     *     path = "/link/{id}",
+     *     name = "app_link_show",
+     *     requirements = {"id"="\d+"}
+     * )
+     * @View
+     */
+    public function deleteAction(Link $link)
+    {
+        $id = $link->getId();
+        if (!$link->getId()) {
+            return 'The link does not exist';
+        }
+        $em = $this->getDoctrine()->getManager();
+
+        $em->remove($link);
+        $em->flush();
+
+        return 'The id '.$id.' has been removed';
+    }
+
+    /**
+     * @Rest\Put(
+     *     path = "/link/{id}",
+     *     name = "app_link_show",
+     *     requirements = {"id"="\d+"}
+     * )
+     * @View
+     */
+    public function updateAction(Link $link)
+    {
+        return $link;
+    }
+
 }
